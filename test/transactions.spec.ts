@@ -53,4 +53,37 @@ describe('Rotas de transações', () => {
       }),
     ])
   })
+
+  it('listar uma transação expecífica', async () => {
+    const createTransactionResponse = await request(app.server)
+      .post('/transactions')
+      .send({
+        title: 'New transaction',
+        amount: 5000,
+        type: 'credit',
+      })
+
+    const cookies: string[] = createTransactionResponse.get(
+      'Set-Cookie',
+    ) as string[]
+
+    const listTransactionsResponse = await request(app.server)
+      .get('/transactions')
+      .set('Cookie', cookies)
+      .expect(200)
+
+    const transactionId = listTransactionsResponse.body.transactions[0].id
+
+    const getTransactionResponse = await request(app.server)
+      .get(`/transactions/${transactionId}`)
+      .set('Cookie', cookies)
+      .expect(200)
+
+    expect(getTransactionResponse.body.transaction).toEqual(
+      expect.objectContaining({
+        title: 'New transaction',
+        amount: 5000,
+      }),
+    )
+  })
 })
